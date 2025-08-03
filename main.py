@@ -1,14 +1,35 @@
 import pygame
 
-pygame.init()       # initializes pygame for the game
+# initialises pygame for the game
+pygame.init()
 
-screen = pygame.display.set_mode((1280, 720), pygame.RESIZABLE)             # sets a specific resolution
-pygame.display.set_caption("Plastic Pollution Tetris")   # sets a name at the top of the window
+# screen resolutions
+screen_width = 1280     
+screen_height = 720
 
+# makes the window resizable (with the default screen resolution)
+screen = pygame.display.set_mode((screen_width, screen_height), pygame.RESIZABLE)
+
+# sets a name at the top of the window
+pygame.display.set_caption("Plastic Pollution Tetris")
+
+# load and scale the background image
+background = pygame.image.load("ocean_background.jpg")
+background = pygame.transform.scale(background, (screen_width, screen_height))
+
+# main game loop
 running = True
-while running:                             # loop that quits the game if closed
+while running:
+    
+    # draws background image
+    screen.blit(background, (0, 0)) 
+
+    # loop that quits the game cleanly
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+
+    # updates the background (for the image)
+    pygame.display.flip()
 
 pygame.quit()
