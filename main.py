@@ -2,7 +2,7 @@ import pygame
 
 pygame.init()       # initializes pygame for the game
 
-screen = pygame.display.set_mode((400, 600))             # sets a specific resolution
+screen = pygame.display.set_mode((1280, 720), pygame.RESIZABLE)             # sets a specific resolution
 pygame.display.set_caption("Plastic Pollution Tetris")   # sets a name at the top of the window
 
 running = True
