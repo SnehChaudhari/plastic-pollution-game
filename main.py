@@ -1,5 +1,6 @@
 import pygame
 import sys
+import random
 
 # initialises pygame for the game
 pygame.init()
@@ -32,15 +33,31 @@ pygame.display.set_caption("Plastic Pollution Tetris")
 background = pygame.image.load("ocean_background.jpg")
 background = pygame.transform.scale(background, (screen_width, screen_height))
 
-# tetromino dictionary
-tetromino = {
-    "blocks": [(4, 0), (4, 1), (4, 2), (4, 3)],
-    "colour": "cyan"
-    }
+# tetromino dictionary (7 shapes)
+tetromino_shapes = [
+    {"blocks": [(0, 1), (1, 1), (2, 1), (3, 1)], "colour": "cyan"},     # I
+    {"blocks": [(1, 0), (0, 1), (1, 1), (2, 1)], "colour": "blue"},     # T
+    {"blocks": [(0, 0), (0, 1), (1, 1), (2, 1)], "colour": "orange"},   # L
+    {"blocks": [(2, 0), (0, 1), (1, 1), (2, 1)], "colour": "red"},      # J
+    {"blocks": [(1, 0), (2, 0), (0, 1), (1, 1)], "colour": "green"},    # S
+    {"blocks": [(0, 0), (1, 0), (1, 1), (2, 1)], "colour": "yellow"},   # Z
+    {"blocks": [(0, 0), (1, 0), (0, 1), (1, 1)], "colour": "purple"}    # O
+            ]
 
 # ticks for gravity (miliseconds)
 fall_speed = 500
 last_fall_time = pygame.time.get_ticks()
+
+# function for making new tetromino from any of the shapes
+def new_tetromino():
+    shape = random.choice(tetromino_shapes)
+    return {
+        "blocks": [(x + grid_width // 2 - 2, y) for x, y in shape["blocks"]],
+        "colour": shape["colour"]
+            }
+
+# for current falling tetromino
+tetromino = new_tetromino()
 
 # function for drawing grid
 def draw_grid():
@@ -50,14 +67,18 @@ def draw_grid():
             pygame.draw.rect(screen, "grey", rect, 1)   # 1 pixel border
 
 # function for drawing tetromino
-def draw_tetromino(tetromino):
-    for x, y in tetromino["blocks"]:
+def draw_tetromino(tetromino_shapes):
+    for x, y in tetromino_shapes["blocks"]:
         rect = pygame.Rect(grid_x + x * cell_size, grid_y + y * cell_size, cell_size, cell_size)
-        pygame.draw.rect(screen, tetromino["colour"], rect)
+        pygame.draw.rect(screen, tetromino_shapes["colour"], rect)
 
-# function for moving tetromino
-def move_tetromino_down(tetromino):
-    tetromino["blocks"] = [(x, y + 1) for x, y in tetromino["blocks"]]
+# function for moving tetromino down (gravity)
+def move_tetromino_down(tetromino_shapes):
+    tetromino_shapes["blocks"] = [(x, y + 1) for x, y in tetromino["blocks"]]
+
+# function for checker at the bottom (no collision logic yet)
+def has_reached_bottom(tetromino):
+    return any(y >= grid_height - 1 for _, y in tetromino["blocks"])
 
 # main game loop
 running = True
@@ -71,7 +92,10 @@ while running:
     # gravity timing using ticks (miliseconds)
     current_time = pygame.time.get_ticks()
     if current_time - last_fall_time > fall_speed:
-        move_tetromino_down(tetromino)
+        if has_reached_bottom(tetromino):
+            tetromino = new_tetromino()
+        else:
+            move_tetromino_down(tetromino)
         last_fall_time = current_time
     
     # draws background image
