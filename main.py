@@ -22,10 +22,7 @@ grid_pixel_height = grid_height * cell_size
 grid_x = (screen_width - grid_pixel_width) / 2
 grid_y = (screen_height - grid_pixel_height) / 2
 
-# our very first tetromino (placed in the center as an example
-tetromino1 = [(4, 0), (4, 1), (4, 2), (4, 3)]
-
-# makes the window resizable (with the default screen resolution)
+# setup display using default resolution
 screen = pygame.display.set_mode((screen_width, screen_height))
 
 # sets a name at the top of the window
@@ -35,6 +32,16 @@ pygame.display.set_caption("Plastic Pollution Tetris")
 background = pygame.image.load("ocean_background.jpg")
 background = pygame.transform.scale(background, (screen_width, screen_height))
 
+# tetromino dictionary
+tetromino = {
+    "blocks": [(4, 0), (4, 1), (4, 2), (4, 3)],
+    "colour": "cyan"
+    }
+
+# ticks for gravity (miliseconds)
+fall_speed = 500
+last_fall_time = pygame.time.get_ticks()
+
 # function for drawing grid
 def draw_grid():
     for row in range(grid_height):
@@ -43,10 +50,14 @@ def draw_grid():
             pygame.draw.rect(screen, "grey", rect, 1)   # 1 pixel border
 
 # function for drawing tetromino
-def draw_tetromino(blocks, colour):
-    for x, y in blocks:
+def draw_tetromino(tetromino):
+    for x, y in tetromino["blocks"]:
         rect = pygame.Rect(grid_x + x * cell_size, grid_y + y * cell_size, cell_size, cell_size)
-        pygame.draw.rect(screen, colour, rect)
+        pygame.draw.rect(screen, tetromino["colour"], rect)
+
+# function for moving tetromino
+def move_tetromino_down(tetromino):
+    tetromino["blocks"] = [(x, y + 1) for x, y in tetromino["blocks"]]
 
 # main game loop
 running = True
@@ -56,13 +67,19 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+
+    # gravity timing using ticks (miliseconds)
+    current_time = pygame.time.get_ticks()
+    if current_time - last_fall_time > fall_speed:
+        move_tetromino_down(tetromino)
+        last_fall_time = current_time
     
     # draws background image
     screen.blit(background, (0, 0))
 
     # use functions to draw grid and our tetromino
     draw_grid()
-    draw_tetromino(tetromino1, "cyan")
+    draw_tetromino(tetromino)
 
     # updates the background (for the image)
     pygame.display.flip()
