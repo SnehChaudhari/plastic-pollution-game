@@ -48,6 +48,10 @@ tetromino_shapes = [
 fall_speed = 500
 last_fall_time = pygame.time.get_ticks()
 
+# tick delay for movement
+move_delay = 150
+last_move_time = pygame.time.get_ticks()
+
 # function for making new tetromino from any of the shapes
 def new_tetromino():
     shape = random.choice(tetromino_shapes)
@@ -56,12 +60,13 @@ def new_tetromino():
         "colour": shape["colour"]
             }
 
+# rotation control placeholder (not implemented or used yet)
+def rotate_tetromino(tetromino):
+    # just a placeholder for now
+    pass
+
 # for current falling tetromino
 tetromino = new_tetromino()
-
-# offsets to track block position
-offset_x = 0
-offset_y = 0
 
 # function for drawing grid
 def draw_grid():
@@ -73,7 +78,7 @@ def draw_grid():
 # function for drawing tetromino
 def draw_tetromino(tetromino_shapes):
     for x, y in tetromino_shapes["blocks"]:
-        rect = pygame.Rect(grid_x + (x + offset_x) * cell_size, grid_y + (y + offset_y) * cell_size, cell_size, cell_size)
+        rect = pygame.Rect(grid_x + x * cell_size, grid_y + y * cell_size, cell_size, cell_size)
         pygame.draw.rect(screen, tetromino_shapes["colour"], rect)
 
 # function for moving tetromino down (gravity)
@@ -84,17 +89,27 @@ def move_tetromino_down(tetromino_shapes):
 def has_reached_bottom(tetromino):
     return any(y >= grid_height - 1 for _, y in tetromino["blocks"])
 
+# function for moving tetromino sideways
+def move_tetromino_sideways(tetromino, dx):
+    tetromino["blocks"] = [(x + dx, y) for x, y in tetromino["blocks"]]
+
 # function to handle movement input
-# and implement using offsets
-def handle_input():
-    global offset_x, offset_y
+# has a cooldown now
+def handle_input(tetromino):
+    global last_move_time
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_LEFT]:
-        offset_x -= 1
-    elif keys[pygame.K_RIGHT]:
-        offset_x += 1
-    elif keys[pygame.K_DOWN]:
-        offset_y += 1
+    current_time = pygame.time.get_ticks()
+
+    if current_time - last_move_time > move_delay:
+        if keys[pygame.K_LEFT]:
+            move_tetromino_sideways(tetromino, -1)
+            last_move_time = current_time
+        elif keys[pygame.K_RIGHT]:
+            move_tetromino_sideways(tetromino, 1)
+            last_move_time = current_time
+        elif keys[pygame.K_DOWN]:
+            move_tetromino_down(tetromino)
+            last_move_time = current_time
 
 # main game loop
 running = True
@@ -105,8 +120,13 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
+        # rotate key calling function
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_UP:
+                rotate_tetromino(tetromino)
+
     # calling controls function
-    handle_input()
+    handle_input(tetromino)
 
     # gravity timing using ticks (miliseconds)
     current_time = pygame.time.get_ticks()
