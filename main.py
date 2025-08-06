@@ -60,10 +60,25 @@ def new_tetromino():
         "colour": shape["colour"]
             }
 
-# rotation control placeholder (not implemented or used yet)
+# rotation control 
 def rotate_tetromino(tetromino):
     # just a placeholder for now
-    pass
+    blocks = tetromino["blocks"]
+    # use the second block as the center of rotation
+    center_x, center_y = blocks[1]
+
+    rotated_blocks = []
+    for x, y in blocks:
+        # translate point to origin, rotate, then translate back
+        rel_x, rel_y = x - center_x, y - center_y
+        new_x = center_x - rel_y
+        new_y = center_y + rel_x
+        rotated_blocks.append((new_x, new_y))
+
+        # check if within grid
+        # also keeps the blocks within the grid
+    if all(0 <= x < grid_width and 0 <= y < grid_height for x, y in rotated_blocks):
+        tetromino["blocks"] = rotated_blocks
 
 # for current falling tetromino
 tetromino = new_tetromino()
@@ -89,9 +104,11 @@ def move_tetromino_down(tetromino_shapes):
 def has_reached_bottom(tetromino):
     return any(y >= grid_height - 1 for _, y in tetromino["blocks"])
 
-# function for moving tetromino sideways
+# function for moving tetromino sideways (with grid collision checker)
 def move_tetromino_sideways(tetromino, dx):
-    tetromino["blocks"] = [(x + dx, y) for x, y in tetromino["blocks"]]
+    new_blocks = [(x + dx, y) for x, y in tetromino["blocks"]]
+    if all(0 <= x < grid_width for x, y in new_blocks):
+        tetromino["blocks"] = new_blocks
 
 # function to handle movement input
 # has a cooldown now
