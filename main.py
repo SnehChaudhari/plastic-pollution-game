@@ -52,6 +52,9 @@ last_fall_time = pygame.time.get_ticks()
 move_delay = 150
 last_move_time = pygame.time.get_ticks()
 
+# list to store frozen blocks
+frozen_blocks = []    # (x, y, colour)
+
 # function for making new tetromino from any of the shapes
 def new_tetromino():
     shape = random.choice(tetromino_shapes)
@@ -75,9 +78,8 @@ def rotate_tetromino(tetromino):
         new_y = center_y + rel_x
         rotated_blocks.append((new_x, new_y))
 
-        # check if within grid
-        # also keeps the blocks within the grid
-    if all(0 <= x < grid_width and 0 <= y < grid_height for x, y in rotated_blocks):
+        # collision detection
+    if not check_collision(rotated_blocks):
         tetromino["blocks"] = rotated_blocks
 
 # for current falling tetromino
@@ -96,18 +98,39 @@ def draw_tetromino(tetromino_shapes):
         rect = pygame.Rect(grid_x + x * cell_size, grid_y + y * cell_size, cell_size, cell_size)
         pygame.draw.rect(screen, tetromino_shapes["colour"], rect)
 
+# function for drawing frozen blocks
+def draw_frozen_blocks():
+    for x, y, colour in frozen_blocks:
+        rect = pygame.Rect(grid_x + x * cell_size, grid_y + y * cell_size, cell_size, cell_size)
+        pygame.draw.rect(screen, colour, rect)
+
+# function for checking collision of blocks
+def check_collision(blocks):
+    for x, y in blocks:
+        if x < 0 or x >= grid_width or y >= grid_height:
+            return True
+        if (x, y) in [(bx, by) for bx, by, _ in frozen_blocks]:
+            return True
+    return False
+
 # function for moving tetromino down (gravity)
 def move_tetromino_down(tetromino_shapes):
-    tetromino_shapes["blocks"] = [(x, y + 1) for x, y in tetromino["blocks"]]
+    moved_blocks = [(x, y + 1) for x, y in tetromino["blocks"]]
+    if not check_collision(moved_blocks):
+        tetromino["blocks"] = moved_blocks
+        return True
+    return False
 
-# function for checker at the bottom (no collision logic yet)
-def has_reached_bottom(tetromino):
-    return any(y >= grid_height - 1 for _, y in tetromino["blocks"])
+# function for stacking the falling tetromino onto already frozen blocks
+def stack_tetromino(tetromino):
+    for x, y in tetromino["blocks"]:
+        frozen_blocks.append((x, y, tetromino["colour"]))
 
 # function for moving tetromino sideways (with grid collision checker)
 def move_tetromino_sideways(tetromino, dx):
     new_blocks = [(x + dx, y) for x, y in tetromino["blocks"]]
-    if all(0 <= x < grid_width for x, y in new_blocks):
+    # collision detection
+    if not check_collision(new_blocks):
         tetromino["blocks"] = new_blocks
 
 # function to handle movement input
@@ -148,19 +171,22 @@ while running:
     # gravity timing using ticks (miliseconds)
     current_time = pygame.time.get_ticks()
     if current_time - last_fall_time > fall_speed:
-        if has_reached_bottom(tetromino):
+        #collision detection
+        if not move_tetromino_down(tetromino):
+            stack_tetromino(tetromino)
             tetromino = new_tetromino()
-        else:
-            move_tetromino_down(tetromino)
         last_fall_time = current_time
     
     # draws background image
     screen.blit(background, (0, 0))
 
-    # use functions to draw grid and our tetromino
+    # use functions to draw grid and tetrominos
     draw_grid()
     draw_tetromino(tetromino)
 
+    # use function to draw frozen blocks
+    draw_frozen_blocks()
+    
     # updates the background (for the image)
     pygame.display.flip()
 
