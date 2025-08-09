@@ -125,6 +125,26 @@ def move_tetromino_down(tetromino_shapes):
 def stack_tetromino(tetromino):
     for x, y in tetromino["blocks"]:
         frozen_blocks.append((x, y, tetromino["colour"]))
+    clear_lines()
+
+# function to clear full lines (horizontally)
+def clear_lines():
+    global frozen_blocks
+    new_frozen = []
+    rows = [y for _, y, _ in frozen_blocks]
+    full_rows = []
+
+    for y in range(grid_height):
+        if rows.count(y) >= grid_width:
+            full_rows.append(y)
+
+    if full_rows:
+        for x, y, colour in frozen_blocks:
+            if y not in full_rows:
+                # count how many cleared rows are below the current y
+                shift = sum(1 for row in full_rows if row > y)
+                new_frozen.append((x, y + shift, colour))
+        frozen_blocks = new_frozen
 
 # function for moving tetromino sideways (with grid collision checker)
 def move_tetromino_sideways(tetromino, dx):
