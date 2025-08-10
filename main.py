@@ -28,6 +28,9 @@ score = 0
 level = 1
 lines_cleared_total = 0
 
+# game over boolean
+game_over = False
+
 # font for score/level
 font = pygame.font.SysFont(None, 36)
 
@@ -71,6 +74,15 @@ def new_tetromino():
         "colour": shape["colour"]
             }
 
+# function to draw game over screen
+def draw_game_over():
+    game_over_text = font.render("GAME OVER", True, "white")
+    restart_text = font.render("Press R to Restart", True, "white")
+    screen.blit(game_over_text, (screen_width // 2 - game_over_text.get_width() // 2,
+                                 screen_height // 2 - game_over_text.get_height()))
+    screen.blit(restart_text, (screen_width // 2 - restart_text.get_width() // 2,
+                               screen_height // 2 + 20))
+
 # rotation control 
 def rotate_tetromino(tetromino):
     # just a placeholder for now
@@ -89,6 +101,18 @@ def rotate_tetromino(tetromino):
         # collision detection
     if not check_collision(rotated_blocks):
         tetromino["blocks"] = rotated_blocks
+
+# function for restarting the game
+def restart_game():
+    global score, level, lines_cleared_total, frozen_blocks, tetromino, game_over, fall_speed, last_fall_time
+    score = 0
+    level = 1
+    lines_cleared_total = 0
+    frozen_blocks = []
+    tetromino = new_tetromino()
+    game_over = False
+    fall_speed = 500
+    last_fall_time = pygame.time.get_ticks()
 
 # for current falling tetromino
 tetromino = new_tetromino()
@@ -202,23 +226,34 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-
+        
+        # implementing restart function (blank for now)
+        if game_over:
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
+                restart_game()
+        
         # rotate key calling function
+        
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
                 rotate_tetromino(tetromino)
 
-    # calling controls function
-    handle_input(tetromino)
-
-    # gravity timing using ticks (miliseconds)
-    current_time = pygame.time.get_ticks()
-    if current_time - last_fall_time > fall_speed:
-        #collision detection
-        if not move_tetromino_down(tetromino):
-            stack_tetromino(tetromino)
-            tetromino = new_tetromino()
-        last_fall_time = current_time
+    # wrapping everything in game over loop
+    if not game_over:
+        
+        # calling controls function
+        handle_input(tetromino)
+    
+        # gravity timing using ticks (miliseconds)
+        current_time = pygame.time.get_ticks()
+        if current_time - last_fall_time > fall_speed:
+            #collision detection
+            if not move_tetromino_down(tetromino):
+                stack_tetromino(tetromino)
+                tetromino = new_tetromino()
+                if check_collision(tetromino["blocks"]):
+                    game_over = True
+            last_fall_time = current_time
     
     # draws background image
     screen.blit(background, (0, 0))
@@ -232,8 +267,12 @@ while running:
 
     # use function to draw score
     draw_score_level()
-    
+
+    # calling the draw game over function
+    if game_over:
+        draw_game_over()
+
     # updates the background (for the image)
     pygame.display.flip()
-
+    
 pygame.quit()
