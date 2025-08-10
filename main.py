@@ -23,6 +23,14 @@ grid_pixel_height = grid_height * cell_size
 grid_x = (screen_width - grid_pixel_width) / 2
 grid_y = (screen_height - grid_pixel_height) / 2
 
+# scoring and level variables
+score = 0
+level = 1
+lines_cleared_total = 0
+
+# font for score/level
+font = pygame.font.SysFont(None, 36)
+
 # setup display using default resolution
 screen = pygame.display.set_mode((screen_width, screen_height))
 
@@ -129,7 +137,7 @@ def stack_tetromino(tetromino):
 
 # function to clear full lines (horizontally)
 def clear_lines():
-    global frozen_blocks
+    global frozen_blocks, score, level, lines_cleared_total, fall_speed
     new_frozen = []
     rows = [y for _, y, _ in frozen_blocks]
     full_rows = []
@@ -145,6 +153,21 @@ def clear_lines():
                 shift = sum(1 for row in full_rows if row > y)
                 new_frozen.append((x, y + shift, colour))
         frozen_blocks = new_frozen
+
+    # score counting section
+    lines_cleared = len(full_rows)
+    score += lines_cleared * 100
+    lines_cleared_total += lines_cleared
+    # level progression
+    if lines_cleared_total >= level * 5: # every 5 lines
+        level += 1
+        fall_speed = max(100, fall_speed - 50) # blocks fall faster
+
+def draw_score_level():
+    score_text = font.render(f"Score: {score}", True, "white")
+    level_text= font.render(f"Level: {level}", True, "white")
+    screen.blit(score_text, (20, 20))
+    screen.blit(level_text, (20, 60))
 
 # function for moving tetromino sideways (with grid collision checker)
 def move_tetromino_sideways(tetromino, dx):
@@ -206,6 +229,9 @@ while running:
 
     # use function to draw frozen blocks
     draw_frozen_blocks()
+
+    # use function to draw score
+    draw_score_level()
     
     # updates the background (for the image)
     pygame.display.flip()
