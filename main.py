@@ -4,6 +4,7 @@ import random
 
 # initialises pygame for the game
 pygame.init()
+pygame.mixer.init()
 
 # screen resolutions
 screen_width = 1280     
@@ -40,9 +41,23 @@ screen = pygame.display.set_mode((screen_width, screen_height))
 # sets a name at the top of the window
 pygame.display.set_caption("Plastic Pollution Tetris")
 
-# load and scale the background image
-background = pygame.image.load("ocean_background.jpg")
-background = pygame.transform.scale(background, (screen_width, screen_height))
+# load and scale the background images
+bg_game = pygame.image.load("ocean_background.jpg")
+bg_game = pygame.transform.scale(bg_game, (screen_width, screen_height))
+
+bg_menu = pygame.image.load("shore_menu.jpg")
+bg_menu = pygame.transform.scale(bg_menu, (screen_width, screen_height))
+
+bg_end = pygame.image.load("shore_endscreen.jpg")
+bg_end = pygame.transform.scale(bg_end, (screen_width, screen_height))
+
+# load sounds
+ambience = pygame.mixer.Sound("ambience.mp3")
+ambience.set_volume(0.3)
+ambience.play(-1) # loop forever
+
+bubble = pygame.mixer.Sound("bubbles.mp3")
+bubble.set_volume(0.3)
 
 # tetromino dictionary (7 shapes)
 tetromino_shapes = [
@@ -81,6 +96,9 @@ def new_tetromino():
 # function to draw game over screen
 def draw_game_over():
 
+    # background game over image
+    screen.blit(bg_end, (0, 0))
+    
     # main text
     game_over_text = font.render("GAME OVER", True, "white")
     restart_text = font.render("Press R to Restart", True, "white")
@@ -200,6 +218,7 @@ def clear_lines():
             full_rows.append(y)
 
     if full_rows:
+        bubble.play() # play bubble sound effect when lines cleared
         for x, y, colour in frozen_blocks:
             if y not in full_rows:
                 # count how many cleared rows are below the current y
@@ -249,6 +268,7 @@ def handle_input(tetromino):
 
 # function for drawing menu
 def draw_menu():
+    screen.blit(bg_menu, (0, 0))
     title = font.render("Plastic Pollution Tetris", True, "white")
     prompt = font.render("Press ENTER to Start", True, "white")
     screen.blit(title, (screen_width//2 - title.get_width()//2, screen_height//2 - 60))
@@ -257,9 +277,6 @@ def draw_menu():
 # main game loop
 running = True
 while running:
-
-    # draws background image
-    screen.blit(background, (0, 0))
     
     # loop that quits the game cleanly
     for event in pygame.event.get():
@@ -299,6 +316,9 @@ while running:
 
     # wrapping everything in game_state playing loop
     elif game_state == "playing":
+
+        # drawing main background image
+        screen.blit(bg_game, (0, 0))
         
         # calling controls function
         handle_input(tetromino)
