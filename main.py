@@ -66,6 +66,10 @@ last_move_time = pygame.time.get_ticks()
 # list to store frozen blocks
 frozen_blocks = []    # (x, y, colour)
 
+# game state, used for determining if the game is
+# paused, in main menu, ended, or playing.
+game_state = "menu"     # "menu", "end", "playing", "paused"
+
 # function for making new tetromino from any of the shapes
 def new_tetromino():
     shape = random.choice(tetromino_shapes)
@@ -76,12 +80,37 @@ def new_tetromino():
 
 # function to draw game over screen
 def draw_game_over():
+
+    # main text
     game_over_text = font.render("GAME OVER", True, "white")
     restart_text = font.render("Press R to Restart", True, "white")
+    menu_text = font.render("Press M to go back to Menu", True, "white")
+
+    # stats text
+    score_text = font.render(f"Final Score: {score}", True, "white")
+    level_text = font.render(f"Level Reached: {level}", True, "white")
+    lines_text = font.render(f"Lines Cleared: {lines_cleared_total}", True, "white")
+
+    # draw texts
     screen.blit(game_over_text, (screen_width // 2 - game_over_text.get_width() // 2,
-                                 screen_height // 2 - game_over_text.get_height()))
+                                 screen_height // 2 - 120))
+    screen.blit(score_text, (screen_width // 2 - score_text.get_width() // 2,
+                                 screen_height // 2 - 60))
+    screen.blit(level_text, (screen_width // 2 - level_text.get_width() // 2,
+                                 screen_height // 2 - 30))
+    screen.blit(lines_text, (screen_width // 2 - lines_text.get_width() // 2,
+                                 screen_height // 2))
     screen.blit(restart_text, (screen_width // 2 - restart_text.get_width() // 2,
-                               screen_height // 2 + 20))
+                               screen_height // 2 + 60))
+    screen.blit(menu_text, (screen_width // 2 - menu_text.get_width() // 2,
+                               screen_height // 2 + 90))
+
+# function to draw pause screen
+def draw_pause():
+    pause_text = font.render("PAUSED", True, "white")
+    resume_text = font.render("Press P to Resume", True, "white")
+    screen.blit(pause_text, (screen_width // 2 - pause_text.get_width() // 2, screen_height / 2 - 50))
+    screen.blit(resume_text, (screen_width // 2 - resume_text.get_width() // 2, screen_height // 2))
 
 # rotation control 
 def rotate_tetromino(tetromino):
@@ -218,28 +247,58 @@ def handle_input(tetromino):
             move_tetromino_down(tetromino)
             last_move_time = current_time
 
+# function for drawing menu
+def draw_menu():
+    title = font.render("Plastic Pollution Tetris", True, "white")
+    prompt = font.render("Press ENTER to Start", True, "white")
+    screen.blit(title, (screen_width//2 - title.get_width()//2, screen_height//2 - 60))
+    screen.blit(prompt, (screen_width//2 - prompt.get_width()//2, screen_height//2))
+            
 # main game loop
 running = True
 while running:
 
+    # draws background image
+    screen.blit(background, (0, 0))
+    
     # loop that quits the game cleanly
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        
-        # implementing restart function (blank for now)
-        if game_over:
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
+
+        # implementing menu function
+        if game_state == "menu":
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
                 restart_game()
+                game_state = "playing"
         
         # rotate key calling function
-        
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP:
-                rotate_tetromino(tetromino)
+        elif game_state == "playing":
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    rotate_tetromino(tetromino)
+                elif event.key == pygame.K_p:
+                    game_state = "paused"
 
-    # wrapping everything in game over loop
-    if not game_over:
+        # pause game calling function            
+        elif game_state == "paused":
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_p:
+                game_state = "playing"
+
+        # implementing restart function
+        elif game_state == "end":
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_r:
+                restart_game()
+                game_state = "playing"
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_m:
+                game_state = "menu"
+
+    # drawing menu
+    if game_state == "menu":
+        draw_menu()
+
+    # wrapping everything in game_state playing loop
+    elif game_state == "playing":
         
         # calling controls function
         handle_input(tetromino)
@@ -252,24 +311,25 @@ while running:
                 stack_tetromino(tetromino)
                 tetromino = new_tetromino()
                 if check_collision(tetromino["blocks"]):
-                    game_over = True
+                    game_state = "end"
             last_fall_time = current_time
-    
-    # draws background image
-    screen.blit(background, (0, 0))
 
-    # use functions to draw grid and tetrominos
-    draw_grid()
-    draw_tetromino(tetromino)
+        # use functions to draw grid and tetrominos
+        draw_grid()
+        draw_tetromino(tetromino)
 
-    # use function to draw frozen blocks
-    draw_frozen_blocks()
+        # use function to draw frozen blocks
+        draw_frozen_blocks()
 
-    # use function to draw score
-    draw_score_level()
+        # use function to draw score
+        draw_score_level()
 
+    # calling the function to draw pause screen
+    elif game_state == "paused":
+        draw_pause()
+            
     # calling the draw game over function
-    if game_over:
+    elif game_state == "end":
         draw_game_over()
 
     # updates the background (for the image)
