@@ -70,6 +70,21 @@ tetromino_shapes = [
     {"blocks": [(0, 0), (1, 0), (0, 1), (1, 1)], "colour": "purple"}    # O
             ]
 
+# plastic fun fact popups dictionary
+fun_facts = [
+    # United Nations (2017). Marine debris: pollution in our oceans and seas.
+    "Over 8 million tonnes of plastic enter the ocean every year.",
+
+    # WWF-Australia (2018). Plastic pollution is killing sea turtles – here’s how.
+    "More than half of all sea turtles have eaten plastic.",
+
+    # WWF-Australia (2018), citing World Economic Forum (2016).
+    "By 2050, there could be more plastic in the ocean than fish (by weight).",
+
+    # United Nations Environment Programme (2023). Plastic Pollution.
+    "Plastic pollution affects over 800 marine species worldwide."
+]
+
 # ticks for gravity (miliseconds)
 fall_speed = 500
 last_fall_time = pygame.time.get_ticks()
@@ -84,6 +99,61 @@ frozen_blocks = []    # (x, y, colour)
 # game state, used for determining if the game is
 # paused, in main menu, ended, or playing.
 game_state = "menu"     # "menu", "end", "playing", "paused"
+
+# pop ups constants
+show_fun_fact = False
+current_fun_fact = ""
+fun_fact_start_time = 0
+fun_fact_start_time = 4000 # 4000 ms = 4 seconds
+
+# function for pop ups
+def draw_fun_fact():
+    global show_fun_fact
+    if show_fun_fact:
+        # popup dimensions beside the grid
+        popup_width = 300
+        popup_height = 150
+        popup_x = grid_x + grid_pixel_width + 50   # 20px gap beside grid
+        popup_y = grid_y + 500
+
+        # semi-transparent surface
+        popup_surface = pygame.Surface((popup_width, popup_height), pygame.SRCALPHA)
+
+        # wrap text
+        words = current_fun_fact.split(" ")
+        lines = []
+        line = ""
+        for word in words:
+            if font.size(line + word)[0] < popup_width - 20:
+                line += word + " "
+            else:
+                lines.append(line)
+                line = word + " "
+        lines.append(line)
+
+        # render lines on the transparent surface
+        y_offset = 10
+        for line in lines:
+            text_surface = font.render(line, True, (255, 255, 255))
+            popup_surface.blit(text_surface, (10, y_offset))
+            y_offset += text_surface.get_height() + 5
+
+        # draw popup surface onto main screen
+        screen.blit(popup_surface, (popup_x, popup_y))
+
+        # hide after duration
+        if pygame.time.get_ticks() - fun_fact_start_time > fun_fact_duration:
+            show_fun_fact = False
+
+
+# function to trigger a random fun fact popup
+def trigger_fun_fact():
+    global show_fun_fact, current_fun_fact, fun_fact_start_time, fun_fact_duration
+    if not show_fun_fact:  # only trigger if one isn’t already showing
+        current_fun_fact = random.choice(fun_facts)
+        show_fun_fact = True
+        fun_fact_start_time = pygame.time.get_ticks()
+        fun_fact_duration = 4000  # 4 seconds
 
 # function for making new tetromino from any of the shapes
 def new_tetromino():
@@ -234,6 +304,7 @@ def clear_lines():
     if lines_cleared_total >= level * 5: # every 5 lines
         level += 1
         fall_speed = max(100, fall_speed - 50) # blocks fall faster
+        trigger_fun_fact()  # fun fact pops up
 
 def draw_score_level():
     score_text = font.render(f"Score: {score}", True, "white")
@@ -343,6 +414,9 @@ while running:
 
         # use function to draw score
         draw_score_level()
+
+        # use function to show fun fact popups
+        draw_fun_fact()
 
     # calling the function to draw pause screen
     elif game_state == "paused":
