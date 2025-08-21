@@ -33,7 +33,7 @@ lines_cleared_total = 0
 game_over = False
 
 # font for score/level
-font = pygame.font.SysFont(None, 36)
+font = pygame.font.Font("font.ttf", 36)
 
 # setup display using default resolution
 screen = pygame.display.set_mode((screen_width, screen_height))
@@ -193,12 +193,33 @@ def draw_game_over():
     screen.blit(menu_text, (screen_width // 2 - menu_text.get_width() // 2,
                                screen_height // 2 + 90))
 
-# function to draw pause screen
+# function to draw pause screen (with instructions)
 def draw_pause():
     pause_text = font.render("PAUSED", True, "white")
     resume_text = font.render("Press P to Resume", True, "white")
-    screen.blit(pause_text, (screen_width // 2 - pause_text.get_width() // 2, screen_height / 2 - 50))
-    screen.blit(resume_text, (screen_width // 2 - resume_text.get_width() // 2, screen_height // 2))
+
+    # list for instructions
+    instructions_text = [
+                        "UP ARROW - Rotate block",
+                        "LEFT ARROW - Move block left",
+                        "RIGHT ARROW - Move block right",
+                        "DOWN ARROW - Soft block drop",
+                        ]
+    # draw pause and resume text    
+    screen.blit(pause_text, (20, screen_height // 2 - 110))
+    screen.blit(resume_text, (20, screen_height // 2 - 80))
+
+    # draw each instruction in a list format
+    offset_y = screen_height // 2 - 20
+    for line in instructions_text:
+        text_surface = font.render(line, True, "white")
+        screen.blit(text_surface, (20, offset_y))
+        offset_y += text_surface.get_height() + 10        
+
+# function to draw instructions hint
+def draw_instructions_hint():
+    text = font.render("Press P for Instructions", True, (255, 255, 255))
+    screen.blit(text, (20, screen_height - 40))  # bottom-left corner
 
 # rotation control 
 def rotate_tetromino(tetromino):
@@ -418,6 +439,9 @@ while running:
         # use function to show fun fact popups
         draw_fun_fact()
 
+        # use function to draw instruction / pause hint
+        draw_instructions_hint()
+        
     # calling the function to draw pause screen
     elif game_state == "paused":
         draw_pause()
