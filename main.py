@@ -100,6 +100,12 @@ frozen_blocks = []    # (x, y, colour)
 # paused, in main menu, ended, or playing.
 game_state = "menu"     # "menu", "end", "playing", "paused"
 
+# high score variable
+high_score = 0
+
+# high score filename
+high_score_file = "high_score.txt"
+
 # pop ups constants
 show_fun_fact = False
 current_fun_fact = ""
@@ -163,6 +169,20 @@ def new_tetromino():
         "colour": shape["colour"]
             }
 
+# function to load high score from file
+def load_high_score():
+    global high_score
+    try:
+        with open(high_score_file, "r") as f:
+            high_score = int(f.read().strip())
+    except (FileNotFoundError, ValueError):
+        high_score = 0
+
+# function to save high score to file
+def save_high_score():
+    with open(high_score_file, "w") as f:
+        f.write(str(high_score))
+
 # function to draw game over screen
 def draw_game_over():
 
@@ -178,7 +198,8 @@ def draw_game_over():
     score_text = font.render(f"Final Score: {score}", True, "white")
     level_text = font.render(f"Level Reached: {level}", True, "white")
     lines_text = font.render(f"Lines Cleared: {lines_cleared_total}", True, "white")
-
+    high_score_text = font.render(f"High Score: {high_score}", True, "white")
+    
     # draw texts
     screen.blit(game_over_text, (screen_width // 2 - game_over_text.get_width() // 2,
                                  screen_height // 2 - 120))
@@ -188,10 +209,12 @@ def draw_game_over():
                                  screen_height // 2 - 30))
     screen.blit(lines_text, (screen_width // 2 - lines_text.get_width() // 2,
                                  screen_height // 2))
+    screen.blit(high_score_text, (screen_width // 2 - high_score_text.get_width() // 2,
+                              screen_height // 2 + 30))
     screen.blit(restart_text, (screen_width // 2 - restart_text.get_width() // 2,
-                               screen_height // 2 + 60))
-    screen.blit(menu_text, (screen_width // 2 - menu_text.get_width() // 2,
                                screen_height // 2 + 90))
+    screen.blit(menu_text, (screen_width // 2 - menu_text.get_width() // 2,
+                               screen_height // 2 + 120))
 
 # function to draw pause screen (with instructions)
 def draw_pause():
@@ -330,8 +353,12 @@ def clear_lines():
 def draw_score_level():
     score_text = font.render(f"Score: {score}", True, "white")
     level_text= font.render(f"Level: {level}", True, "white")
+    high_score_text = font.render(f"High Score: {high_score}", True, "white")
+    
     screen.blit(score_text, (20, 20))
     screen.blit(level_text, (20, 60))
+    screen.blit(high_score_text, (20, 100))
+
 
 # function for moving tetromino sideways (with grid collision checker)
 def move_tetromino_sideways(tetromino, dx):
@@ -363,9 +390,12 @@ def draw_menu():
     screen.blit(bg_menu, (0, 0))
     title = font.render("Plastic Pollution Tetris", True, "white")
     prompt = font.render("Press ENTER to Start", True, "white")
-    screen.blit(title, (screen_width//2 - title.get_width()//2, screen_height//2 - 60))
-    screen.blit(prompt, (screen_width//2 - prompt.get_width()//2, screen_height//2))
-            
+    screen.blit(title, (screen_width // 2 - title.get_width() // 2, screen_height // 2 - 60))
+    screen.blit(prompt, (screen_width // 2 - prompt.get_width() // 2, screen_height // 2))
+ 
+# loading high score before game loop
+load_high_score()
+
 # main game loop
 running = True
 while running:
@@ -423,6 +453,9 @@ while running:
                 stack_tetromino(tetromino)
                 tetromino = new_tetromino()
                 if check_collision(tetromino["blocks"]):
+                    if score > high_score:
+                        high_score = score
+                        save_high_score()
                     game_state = "end"
             last_fall_time = current_time
 
