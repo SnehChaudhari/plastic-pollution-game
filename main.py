@@ -1,6 +1,7 @@
 import pygame
 import sys
 import random
+import math
 
 # initialises pygame for the game
 pygame.init()
@@ -106,12 +107,61 @@ high_score = 0
 # high score filename
 high_score_file = "high_score.txt"
 
+# load bubble images (bubble1 to bubble5)
+bubble_images = []
+for i in range(1, 6):
+    img = pygame.image.load(f"particles/bubble{i}.png")
+    bubble_images.append(img)
+
 # pop ups constants
 show_fun_fact = False
 current_fun_fact = ""
 fun_fact_start_time = 0
 fun_fact_start_time = 4000 # 4000 ms = 4 seconds
 
+# Bubble class that has all bubble functions
+class Bubble:
+    def __init__(self, x_range):
+        self.x_range = x_range                # remember which side to respawn on
+        self.image = random.choice(bubble_images)
+        self.base_x = random.randint(*x_range)
+        self.x = self.base_x
+        self.y = screen_height + random.randint(0, 200)     # start below screen
+        self.speed = random.uniform(0.7, 1.5)
+        self.wiggle_offset = random.uniform(0, math.pi * 2)
+        self.wiggle_speed = random.uniform(0.01, 0.03)
+        self.wiggle_amplitude = random.randint(2, 2)
+
+    def update(self):
+        # rise upwards
+        self.y -= self.speed
+        # wiggle left-right
+        self.x += int(self.wiggle_amplitude * math.sin(self.wiggle_offset))
+        self.wiggle_offset += self.wiggle_speed
+
+    def draw(self, surface):
+        surface.blit(self.image, (self.x, self.y))
+
+def update_and_draw_bubbles():
+    for b in bubbles:
+        b.update()
+        b.draw(screen)
+
+# create bubble groups for left and right
+bubbles = []
+left_range = (int(grid_x) - 100, int(grid_x) - 20)
+right_range = (int(grid_x + grid_pixel_width + 20), int(grid_x + grid_pixel_width + 100))
+
+# function for spawning bubbles
+def spawn_bubbles(count=5):
+    for _ in range(count):
+        side = random.choice(["left", "right"])
+        if side == "left":
+            x_range = left_range
+        else:
+            x_range = right_range
+        bubbles.append(Bubble(x_range))
+            
 # function for pop ups
 def draw_fun_fact():
     global show_fun_fact
@@ -333,6 +383,7 @@ def clear_lines():
 
     if full_rows:
         bubble.play() # play bubble sound effect when lines cleared
+        spawn_bubbles(8)    # 8 bubbles spawn
         for x, y, colour in frozen_blocks:
             if y not in full_rows:
                 # count how many cleared rows are below the current y
@@ -441,6 +492,9 @@ while running:
 
         # drawing main background image
         screen.blit(bg_game, (0, 0))
+
+        # update bubbles at all times when playing
+        update_and_draw_bubbles()
         
         # calling controls function
         handle_input(tetromino)
