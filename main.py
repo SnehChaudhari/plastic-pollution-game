@@ -34,7 +34,7 @@ lines_cleared_total = 0
 game_over = False
 
 # font for score/level
-font = pygame.font.Font("font.ttf", 36)
+font = pygame.font.Font("text/font.ttf", 36)
 
 # setup display using default resolution
 screen = pygame.display.set_mode((screen_width, screen_height))
@@ -43,21 +43,21 @@ screen = pygame.display.set_mode((screen_width, screen_height))
 pygame.display.set_caption("Plastic Pollution Tetris")
 
 # load and scale the background images
-bg_game = pygame.image.load("ocean_background.jpg")
+bg_game = pygame.image.load("images/ocean_background.jpg")
 bg_game = pygame.transform.scale(bg_game, (screen_width, screen_height))
 
-bg_menu = pygame.image.load("shore_menu.jpg")
+bg_menu = pygame.image.load("images/shore_menu.jpg")
 bg_menu = pygame.transform.scale(bg_menu, (screen_width, screen_height))
 
-bg_end = pygame.image.load("shore_endscreen.jpg")
+bg_end = pygame.image.load("images/shore_endscreen.jpg")
 bg_end = pygame.transform.scale(bg_end, (screen_width, screen_height))
 
 # load sounds
-ambience = pygame.mixer.Sound("ambience.mp3")
+ambience = pygame.mixer.Sound("sounds/ambience.mp3")
 ambience.set_volume(0.3)
 ambience.play(-1) # loop forever
 
-bubble = pygame.mixer.Sound("bubbles.mp3")
+bubble = pygame.mixer.Sound("sounds/bubbles.mp3")
 bubble.set_volume(0.3)
 
 # tetromino dictionary (7 shapes)
@@ -105,7 +105,7 @@ game_state = "menu"     # "menu", "end", "playing", "paused"
 high_score = 0
 
 # high score filename
-high_score_file = "high_score.txt"
+high_score_file = "text/high_score.txt"
 
 # load bubble images (bubble1 to bubble5)
 bubble_images = []
@@ -168,7 +168,7 @@ def draw_fun_fact():
     if show_fun_fact:
         # popup dimensions beside the grid
         popup_width = 300
-        popup_height = 150
+        popup_height = 300
         popup_x = grid_x + grid_pixel_width + 50   # 20px gap beside grid
         popup_y = grid_y + 500
 
@@ -245,7 +245,7 @@ def draw_game_over():
     menu_text = font.render("Press M to go back to Menu", True, "white")
 
     # stats text
-    score_text = font.render(f"Final Score: {score}", True, "white")
+    score_text = font.render(f"Plastic Removed: {score}", True, "white")
     level_text = font.render(f"Level Reached: {level}", True, "white")
     lines_text = font.render(f"Lines Cleared: {lines_cleared_total}", True, "white")
     high_score_text = font.render(f"High Score: {high_score}", True, "white")
